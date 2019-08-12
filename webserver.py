@@ -45,6 +45,7 @@ def mem_load_thread():
         if not load_mem:
             break
         mem_sink.append('0' * 1024*1024*10) # 10 MB
+        time.sleep(1)
     log.info('Mem load ended.')    
 
 class Handler(BaseHTTPRequestHandler):
