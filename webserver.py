@@ -26,6 +26,9 @@ HOST = "0.0.0.0"
 
 load_cpu = False
 
+mem_sink = []
+load_mem = False
+
 def cpu_load_thread():
     log.info('Cpu load started.')    
     while True:
@@ -35,6 +38,14 @@ def cpu_load_thread():
             x = random.randint(0, 1000)
             y = x*x
     log.info('Cpu load ended.')
+
+def mem_load_thread():
+    log.info('Mem load started.')    
+    while True:
+        if not load_mem:
+            break
+        mem_sink.append('0' * 1024*1024*10) # 10 MB
+    log.info('Mem load ended.')    
 
 class Handler(BaseHTTPRequestHandler):
     def do_HEAD(self):
@@ -48,6 +59,7 @@ class Handler(BaseHTTPRequestHandler):
             '/ping': self._ping,
             '/ping_wait': self._ping_wait,
             '/toggle_cpu': self._toggle_cpu,
+            '/toggle_mem': self._toggle_mem,
             '/keepalive': self._keepalive,            
         }
 
@@ -98,6 +110,19 @@ class Handler(BaseHTTPRequestHandler):
 
         code = 200
         content = 'load_cpu: %s' % (load_cpu,)
+        return code, content
+        
+    def _toggle_mem(self):
+        global load_mem
+        load_mem = not load_mem
+
+        if load_mem:
+            t = threading.Thread(target=mem_load_thread)
+            t.start()
+
+        code = 200
+        size = len(mem_sink)
+        content = 'load_mem: %s, size: %s' % (load_mem, size)
         return code, content
 
     def _respond(self, status_code, content):
